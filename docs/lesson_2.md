@@ -11,6 +11,8 @@ Organization
 └── Project(s)
 └── Resources
 
+![alt text](images/GCP_Hierarchy.PNG)
+
 ## Each level has:
 
 - IAM
