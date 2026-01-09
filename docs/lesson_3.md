@@ -150,4 +150,4 @@ A bootstrap project that exists solely to create and manage everything else.
 
 ## Destroying a dev project = OK
 
-## Destroying seed project = career-ending
+## Destroying seed project = career-ending 😂😂😂
