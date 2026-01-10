@@ -1,31 +1,56 @@
-# Local .terraform directories
+.gitignore
+# Local .terraform directories (contains downloaded providers & modules - very large!)
+**/.terraform/*
 .terraform/
 
-# .tfstate files and backups
+# Terraform state files (NEVER commit - use remote backend like GCS/S3!)
 *.tfstate
-*.tfstate.*.backup
+*.tfstate.*
+.terraform.tfstate.lock.info
+.terraform.tfstate
+.terraform.tfstate.backup
+.terraform.lock.hcl
 
-# Crash log files
+# Crash logs from Terraform failures
 crash.log
 crash.*.log
 
-# Exclude all .tfvars files, which are likely to contain sensitive data.
-# Variables can be provided via other mechanisms, such as environment variables,
-# or through a CI/CD system.
-#
-# If you must commit a tfvars file, use a specific name and uncomment the
-# following line to ignore all others.
-# # *tfvars
-#
-# If you want to ignore all tfvars file except a specific one (e.g. terraform.tfvars)
-# uncomment the following lines
-# # *.tfvars
-# # !terraform.tfvars
+# Exclude all .tfvars files by default (they often contain secrets!)
+# If you have non-sensitive .tfvars (e.g., example.tfvars), use !example.tfvars to negate
+*.tfvars
+*.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
 
-# Ignore CLI configuration files
+# Override files (used for local testing/overrides - rarely committed)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Plan files (generated via terraform plan -out=...)
+*.tfplan
+*tfplan*
+
+# Terraform CLI configuration files (personal settings)
 .terraformrc
 terraform.rc
 
-# Optional: ignore plan files saved before destroying Terraform configuration
-# Uncomment the line below if you want to ignore planout files.
-# *tfplan*
+# Dependency lock file - usually committed (for reproducibility), but some teams ignore it
+# .terraform.lock.hcl  # Uncomment if you prefer not to commit it
+
+# IDE / Editor files (common in enterprise setups)
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store  # macOS
+Thumbs.db  # Windows
+
+# Optional: Ignore graph outputs (terraform graph)
+*.dot
+
+# Optional: Ignore any other temporary or backup files
+*~
+*.bak
+*.tmp
