@@ -59,3 +59,5 @@ cd environments/dev
 - terraform apply
 
 ---
+
+### Note: We're maintaining the projects important data now with terraform.tfvars file. However, this is temporary purpose and not a good practice. In enterprise level we use credentials specific Google cloud services such as Secret Manager to store the important information / secretive information such as User's email or password as well as Billing Account ID.
