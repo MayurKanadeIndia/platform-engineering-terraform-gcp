@@ -1,82 +1,147 @@
-# ✅ SET 1 — STATE, PROVIDER, ENVIRONMENT ISOLATION
+# 🔐 LESSON 7 — IAM HARDENING & REMOVING roles/editor
 
-### 1️⃣ Why is the provider still pointing to the seed project?
+### 🎯 Goal of This Lesson
 
-#### The provider points to the seed project because Terraform needs a stable, trusted execution context with permissions to create and manage other projects. The seed project acts as the control plane, not the workload environment.
+By the end of this lesson, you will be able to explain (and implement):
 
-### How Billing Accounts are managed? one billing account or multiple?
+- ❌ Why roles/editor is dangerous
+- ✅ What minimum permissions Terraform actually needs
+- 🔐 How enterprises design IAM for project creation
+- 🧱 How to remove Editor without breaking Terraform
 
-- Small/medium orgs: One centralized billing account (most common)
-- Large enterprises: Multiple billing accounts per BU / cost center
+### 🧠 PART 1 — Why roles/editor Is a Red Flag?
 
-#### “Billing accounts are usually centralized initially and later split for cost isolation and governance.”
+#### What roles/editor actually means:
 
----
+- Create resources
+- Modify resources
+- Delete resources
+- Change IAM
+- Enable/disable APIs
 
-### 2️⃣ Why does each environment need its own backend prefix?
+#### In other words:
 
-#### Each environment needs its own backend prefix to ensure state isolation, limit blast radius, enable independent lifecycle management, and support safe recovery without cross-environment impact.
+- Editor = near-admin
 
-#### “State isolation defines operational boundaries.”
+#### “Editor violates least privilege and hides permission intent.”
 
----
+#### Why we used it temporarily:
 
-### 3️⃣ What would break if dev and prod shared the same module but different state?
-
-#### Using the same module with different state is the correct pattern. What breaks is when dev and prod share the same state, not the same module. State must be isolated; modules should be reused.
-
-#### “We reuse modules, never state.”
-
----
-
-# ✅ SET 2 — FOLDER, ORG, PERSONAL VS ENTERPRISE
-
-### 1️⃣ Why did we design folder_id as optional?
-
-#### We designed folder_id as optional to allow the same module to function in both enterprise orgs and personal accounts, enabling graceful degradation instead of hard failure.
+- Bootstrapping
+- Learning
+- Reducing friction
+- ⚠️ But leaving it is unacceptable in real systems.
 
 ---
 
-### 2️⃣ How would this (folder) module behave differently in a real enterprise org?
+### 🧠 PART 2 — Terraform’s REAL Permission Model (Critical Insight)
 
-#### In a real enterprise org, this module would place projects under specific folders, inherit org policies, enforce governance constraints, and align with cost and access boundaries defined at higher levels.
+#### Terraform does NOT need:
 
-#### 📌 Key idea:
+- Broad permissions
+- Console access
+- Human-like roles
 
-#### Same code, different context, stricter guardrails.
+#### Terraform needs:
 
----
+- Specific APIs
+- Specific verbs
+- Specific scope
 
-### 3️⃣ Why is forcing enterprise structure on personal accounts a bad idea?
+#### We split Terraform permissions into two categories:
 
-### Forcing enterprise structures on personal accounts is a bad idea because those primitives don’t exist. It increases friction, breaks learning workflows, and introduces unnecessary complexity without adding real governance value.
-
-#### “Architecture must match platform maturity.”
-
----
-
-# ✅ SET 3 — PROJECT IDS, IMPORTS, SCALE
-
-### 1️⃣ Why can’t Terraform auto-fix project ID collisions?
-
-#### Terraform cannot auto-fix project ID collisions because project IDs are globally unique identifiers enforced by the cloud provider. Terraform cannot invent or mutate identity decisions without user intent.
-
-#### “Identity must be explicit, never implicit.”
+![alt text](images/terraform_permission_categories.PNG)
 
 ---
 
-### 2️⃣ Why is importing an existing project risky in early platform design?
+# 🧱 PART 3 — What We Will Do (Step-by-Step Plan)
 
-#### Importing an existing project is risky early on because Terraform assumes ownership without historical context, which can lead to unintended deletions, drift, and incorrect assumptions about the current state.
+#### We will replace Editor with explicit roles, in stages.
 
-#### “Importing is adopting risk, not just resources.”
+#### Stage 1 — Identify what Terraform is actually doing
+
+#### Terraform currently:
+
+- Creates projects
+- Links billing
+- Enables APIs
+
+#### So we need permissions for:
+
+- Project creation
+- Billing attachment
+- Service enablement
 
 ---
 
-### 3️⃣ How would a large enterprise guarantee project ID uniqueness?
+# 🛠️ PART 4 — Remove Editor SAFELY (DO NOT RUSH)
 
-#### Enterprises guarantee uniqueness through enforced naming standards, automated suffix generation, and centralized project creation pipelines.
+#### 🔍 Step 1 — See current permissions
 
-#### “Uniqueness is enforced by process, not by chance.”
+![alt text](images/current_permission.PNG)
+
+#### Look for : roles/editor
+
+### 🧹 Step 2 — Replace Editor with explicit roles
+
+- We will remove Editor and add only what is required.
+
+- 1. Grant Project Creator
+     ![alt text](images/grant_project_creator.PNG)
+
+- 2. Grant Billing User (on billing account, NOT project)
+     ![alt text](images/grant_billing_user.PNG)
+
+- 3. Grant Service Usage Admin
+     ![alt text](images/grant_service_usage.PNG)
+
+### 🧹 Step 3 — Remove Editor
+
+![alt text](images/remove_editor.PNG)
+
+---
+
+# 🧪 PART 5 — Validate (VERY IMPORTANT)
+
+#### Now re-run Terraform from:
+
+##### environments/dev
+
+##### > terraform plan
+
+##### > terraform apply
+
+### Expected result:
+
+- ✔️ Still works
+- ✔️ No permission errors
+- ✔️ Editor gone
+
+#### Note: “We start with broad permissions only during bootstrap, then progressively restrict Terraform to least privilege once the platform stabilizes.”
+
+---
+
+# Q & A
+
+### Why is project creation a platform-level permission?
+
+- Project creation is a platform-level permission because it defines the foundational boundary for isolation, governance, billing, IAM, and policy enforcement.
+- Creating a project is not an application concern; it is an organizational decision that impacts cost, security, compliance, and lifecycle management.
+
+#### “Project creation defines organizational boundaries, not workloads.”
+
+### Why is billing access not granted at the project level?
+
+- Billing accounts are not tied to individual projects because billing represents an organizational financial boundary.
+- Centralized billing enables cost allocation, governance, auditing, and financial control across multiple projects while preventing individual teams from bypassing financial guardrails.
+
+#### “Billing is an organizational concern, not a project concern.”
+
+### What would break if a workload team had projectCreator?
+
+- Granting projectCreator to workload teams breaks governance by allowing uncontrolled environment creation, bypassing architectural standards, cost controls, security baselines, and auditability.
+- It shifts platform responsibility to application teams, which leads to sprawl and compliance risk.
+
+#### “Uncontrolled project creation equals uncontrolled risk.”
 
 ---
