@@ -264,3 +264,9 @@ By the end of this lesson, you will be able to explain (and implement):
 - Centralize project creation
 
 #### “Without an Organization, true platform automation is impossible in GCP.”
+
+---
+
+# Note:
+
+![alt text](images/identity_responsibility_split.PNG)
